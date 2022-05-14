@@ -136,7 +136,7 @@
                     name="description"
                     rows="10"
                     placeholder="Include tasks, requirements, salary, etc">
-                    "{{old('description')}}"
+                    {{old('description')}}
                 </textarea>
                 @error('description')
                     <p class="text-red-500 text-xs mt-10">{{$message}}</p>
@@ -147,7 +147,7 @@
                 <button
                     class="bg-laravel text-white rounded py-2 px-4 hover:bg-black"
                 >
-                    Edit Gig
+                    Create Gig
                 </button>
 
                 <a href="/" class="text-black ml-4"> Back </a>
