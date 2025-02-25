@@ -1,0 +1,27 @@
+services:
+  laragigs-db:
+    image: postgres:17
+    container_name: laragigs-db
+    restart: always
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    env_file:
+      - .env
+
+  laragigs-web:
+    build: .
+    container_name: laragigs-web
+    restart: always
+    depends_on:
+      - laragigs-db
+    env_file:
+      - .env
+    volumes:
+      - .:/var/www/html
+    ports:
+      - "8000:80"
+
+volumes:
+  postgres_data:
