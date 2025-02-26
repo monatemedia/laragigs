@@ -3,7 +3,7 @@ FROM composer:2 AS composer
 
 WORKDIR /app
 COPY composer.json composer.lock ./
-RUN composer install --no-dev --no-scripts --no-autoloader
+RUN composer install --no-dev --optimize-autoloader --no-scripts
 
 # Stage 2: Build the application
 FROM php:8.2-apache AS builder
@@ -19,17 +19,28 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # Install PHP extensions
 RUN docker-php-ext-install pdo_mysql zip
 
-# Install Composer
+# Install Composer from the first stage
 COPY --from=composer /usr/bin/composer /usr/bin/composer
-
-# Copy composer dependencies from composer stage
-COPY --from=composer /app/vendor /var/www/html/vendor
 
 # Copy application code
 COPY . /var/www/html
 
+# Copy Composer vendor directory
+COPY --from=composer /app/vendor /var/www/html/vendor
+
 # Set the working directory
 WORKDIR /var/www/html
+
+# Run composer dump-autoload to regenerate autoloader
+RUN composer dump-autoload --optimize
+
+# Run artisan commands after code is in place
+RUN php artisan config:clear
+RUN php artisan cache:clear
+RUN php artisan storage:link
+
+# Run other setup tasks if necessary (e.g., npm install or migrations)
+# RUN npm install && npm run prod
 
 # Finish composer setup
 RUN composer dump-autoload --optimize
@@ -66,7 +77,10 @@ WORKDIR /var/www/html
 RUN chown -R appuser:www-data /var/www/html/storage /var/www/html/bootstrap/cache \
     && chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache
 
-# Set Laravel environment variables
+# Ensure the non-root user has write access to the application
+RUN chown -R appuser:www-data /var/www/html
+
+# Ensure Laravel environment variables
 ENV APP_ENV=production
 ENV APP_DEBUG=false
 
@@ -79,4 +93,3 @@ RUN chmod +x /entrypoint.sh
 
 # Set the entrypoint script as the container startup command
 ENTRYPOINT ["/entrypoint.sh"]
-
