@@ -48,11 +48,12 @@ RUN composer dump-autoload --optimize
 # Stage 3: Production stage
 FROM php:8.2-apache AS production
 
-# Install runtime dependencies and PostgreSQL PHP extension
+# Install runtime dependencies, PostgreSQL PHP extension, and PostgreSQL client
 RUN apt-get update && apt-get install -y --no-install-recommends \
     netcat-openbsd \
     libzip-dev \
     libpq-dev \
+    postgresql-client \
     && rm -rf /var/lib/apt/lists/* \
     && docker-php-ext-install pdo pdo_pgsql
 
